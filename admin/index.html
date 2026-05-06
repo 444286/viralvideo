@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BdViral Admin Panel</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --red: #d32f2f;
+  --dark: #1a1a2e;
+  --card: #ffffff;
+  --bg: #f4f6f9;
+  --border: #e0e0e0;
+  --text: #222;
+  --muted: #777;
+  --green: #2e7d32;
+  --yellow: #f57f17;
+  --blue: #1565c0;
+}
+body { background: var(--bg); font-family: 'Segoe UI', sans-serif; color: var(--text); }
+
+/* LOGIN */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e, #d32f2f);
+}
+.login-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px;
+  width: 340px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  text-align: center;
+}
+.login-box h2 { font-size: 22px; margin-bottom: 6px; color: var(--dark); }
+.login-box p { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+.login-box input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 15px; margin-bottom: 14px;
+  outline: none; transition: border 0.2s;
+}
+.login-box input:focus { border-color: var(--red); }
+.login-box button {
+  width: 100%; padding: 12px; background: var(--red); color: #fff;
+  border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: background 0.2s;
+}
+.login-box button:hover { background: #b71c1c; }
+.login-error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+
+/* MAIN LAYOUT */
+#main-screen { display: none; }
+.sidebar {
+  width: 220px; background: var(--dark); color: #fff;
+  position: fixed; top: 0; left: 0; height: 100vh;
+  display: flex; flex-direction: column; z-index: 100;
+}
+.sidebar .logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar .logo h1 { font-size: 16px; font-weight: 800; color: #fff; }
+.sidebar .logo p { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.nav-links { flex: 1; padding: 12px 0; }
+.nav-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 18px; cursor: pointer; font-size: 14px;
+  color: rgba(255,255,255,0.7); transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+.nav-link:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.nav-link.active {
+  background: rgba(211,47,47,0.2); color: #ff6b6b;
+  border-left-color: #d32f2f;
+}
+.nav-link .icon { font-size: 18px; width: 22px; text-align: center; }
+.sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 12px; color: rgba(255,255,255,0.4);
+}
+
+.main-content {
+  margin-left: 220px;
+  min-height: 100vh;
+  padding: 0;
+}
+.topbar {
+  background: #fff;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.topbar h2 { font-size: 18px; font-weight: 700; }
+.topbar-right { display: flex; gap: 10px; align-items: center; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px 24px 0;
+}
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  border-left: 4px solid var(--red);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.stat-card.blue { border-color: var(--blue); }
+.stat-card.green { border-color: var(--green); }
+.stat-card.yellow { border-color: var(--yellow); }
+.stat-card .num { font-size: 28px; font-weight: 800; }
+.stat-card .label { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+/* CONTENT AREA */
+.content-area { padding: 20px 24px; }
+
+/* CARD */
+.panel-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.panel-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-card-header h3 { font-size: 15px; font-weight: 700; }
+
+/* FORM */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 20px;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+  font-family: inherit;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--red); }
+
+/* THUMB UPLOAD */
+.thumb-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.thumb-upload-area:hover { border-color: var(--red); background: #fff5f5; }
+.thumb-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.thumb-preview {
+  width: 100%; max-height: 160px; object-fit: cover;
+  border-radius: 8px; display: none; margin-bottom: 8px;
+}
+.thumb-upload-area .upload-hint { font-size: 13px; color: var(--muted); }
+.thumb-upload-area .upload-hint strong { color: var(--red); }
+
+/* BUTTONS */
+.btn {
+  padding: 10px 18px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--red); color: #fff; }
+.btn-primary:hover { background: #b71c1c; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { background: #1b5e20; }
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: #999; }
+.btn-danger { background: #ffebee; color: var(--red); border: 1px solid #ffcdd2; }
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.form-actions { padding: 0 20px 20px; display: flex; gap: 10px; }
+
+/* CHECKBOX ROW */
+.check-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; cursor: pointer;
+}
+.check-row input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--red); }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: #f8f9fa; padding: 11px 14px; text-align: left;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--muted); border-bottom: 1px solid var(--border);
+}
+td { padding: 11px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+tr:hover td { background: #fafafa; }
+tr:last-child td { border-bottom: none; }
+
+.thumb-cell img {
+  width: 64px; height: 44px; object-fit: cover;
+  border-radius: 6px; background: #eee;
+}
+.badge-pill {
+  display: inline-block; padding: 3px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-most_popular { background: #fce4ec; color: #c2185b; }
+.badge-today_new { background: #e3f2fd; color: #1565c0; }
+.badge-trending { background: #fff3e0; color: #e65100; }
+
+/* SEARCH / FILTER */
+.filter-bar {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.filter-bar input {
+  padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; outline: none; flex: 1; max-width: 280px;
+}
+.filter-bar input:focus { border-color: var(--red); }
+.filter-bar select {
+  padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; outline: none; cursor: pointer;
+}
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #333; color: #fff;
+  padding: 12px 20px; border-radius: 10px;
+  font-size: 14px; z-index: 9999;
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s ease;
+  display: flex; align-items: center; gap: 8px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 14px;
+  padding: 28px; width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  text-align: center;
+}
+.modal h3 { font-size: 18px; margin-bottom: 10px; }
+.modal p { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+.modal-btns { display: flex; gap: 10px; justify-content: center; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin: 0 20px; }
+.tab-btn {
+  padding: 12px 20px; border: none; background: none;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  color: var(--muted); border-bottom: 2px solid transparent;
+  margin-bottom: -2px; transition: all 0.2s;
+}
+.tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
+
+/* Loading spinner */
+.spinner {
+  border: 3px solid #f0f0f0;
+  border-top-color: var(--red);
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  animation: spin 0.7s linear infinite;
+  margin: 30px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { width: 60px; }
+  .sidebar .logo h1, .sidebar .logo p, .nav-link span { display: none; }
+  .nav-link { justify-content: center; padding: 14px; }
+  .main-content { margin-left: 60px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>🎬 BdViral Admin</h2>
+    <p>Enter your admin key to continue</p>
+    <input type="password" id="admin-key-input" placeholder="Admin Key" autocomplete="off">
+    <button onclick="doLogin()">Login →</button>
+    <div class="login-error" id="login-error">❌ Invalid admin key</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main-screen">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <h1>🎬 BdViral</h1>
+      <p>Admin Panel</p>
+    </div>
+    <div class="nav-links">
+      <div class="nav-link active" onclick="showPage('dashboard')">
+        <span class="icon">📊</span><span>Dashboard</span>
+      </div>
+      <div class="nav-link" onclick="showPage('add-post')">
+        <span class="icon">➕</span><span>Add Post</span>
+      </div>
+      <div class="nav-link" onclick="showPage('manage-posts')">
+        <span class="icon">📋</span><span>Manage Posts</span>
+      </div>
+    </div>
+    <div class="sidebar-footer">v1.0 • BdViral</div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard">
+      <div class="topbar">
+        <h2>📊 Dashboard</h2>
+        <div class="topbar-right">
+          <button class="btn btn-outline btn-sm" onclick="loadStats()">🔄 Refresh</button>
+          <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="num" id="stat-total">—</div>
+          <div class="label">Total Posts</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="num" id="stat-popular">—</div>
+          <div class="label">Most Popular</div>
+        </div>
+        <div class="stat-card green">
+          <div class="num" id="stat-new">—</div>
+          <div class="label">Today New</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="num" id="stat-trending">—</div>
+          <div class="label">Trending Now</div>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="panel-card">
+          <div class="panel-card-header"><h3>⚡ Quick Actions</h3></div>
+          <div style="padding:20px;display:flex;gap:12px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="showPage('add-post')">➕ Add New Post</button>
+            <button class="btn btn-outline" onclick="showPage('manage-posts')">📋 Manage All Posts</button>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-card-header"><h3>📌 Recent Posts</h3></div>
+          <div id="recent-list"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD POST PAGE -->
+    <div id="page-add-post" style="display:none;">
+      <div class="topbar">
+        <h2>➕ Add New Post</h2>
+        <div class="topbar-right">
+          <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="panel-card">
+          <div class="panel-card-header"><h3>Post Details</h3></div>
+          <div class="form-grid" id="add-form">
+            <div class="form-group full">
+              <label>Thumbnail Image *</label>
+              <div class="thumb-upload-area" id="add-thumb-area">
+                <input type="file" accept="image/*" id="add-thumb-file" onchange="previewThumb('add')">
+                <img class="thumb-preview" id="add-thumb-preview">
+                <div class="upload-hint" id="add-upload-hint">
+                  📸 Click to upload thumbnail<br>
+                  <strong>JPG, PNG, WebP</strong> — max 10MB
+                </div>
+              </div>
+            </div>
+            <div class="form-group full">
+              <label>Post Title (Bengali/English) *</label>
+              <input type="text" id="add-title" placeholder="e.g. বর্তমান পোলাপানের নতুন ক্রাশ Aurora...">
+            </div>
+            <div class="form-group full">
+              <label>Link / URL * (Telegram link, t.me/...)</label>
+              <input type="url" id="add-link" placeholder="https://t.me/yourchannel/123">
+            </div>
+            <div class="form-group">
+              <label>Section *</label>
+              <select id="add-section">
+                <option value="most_popular">⭐ Most Popular</option>
+                <option value="today_new">📅 Today New</option>
+                <option value="trending">🔥 Trending Now</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Display Order</label>
+              <input type="number" id="add-order" value="0" min="0">
+            </div>
+            <div class="form-group">
+              <label>Badges</label>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+                <label class="check-row">
+                  <input type="checkbox" id="add-premium" checked>
+                  PREMIUM badge
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" id="add-new">
+                  NEW badge
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" id="add-submit-btn" onclick="submitAddPost()">
+              ➕ Add Post
+            </button>
+            <button class="btn btn-outline" onclick="resetAddForm()">🔄 Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAGE POSTS PAGE -->
+    <div id="page-manage-posts" style="display:none;">
+      <div class="topbar">
+        <h2>📋 Manage Posts</h2>
+        <div class="topbar-right">
+          <button class="btn btn-primary btn-sm" onclick="showPage('add-post')">➕ Add Post</button>
+          <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+        </div>
+      </div>
+      <div class="content-area" style="padding-top:0;">
+        <div class="panel-card" style="margin-top:20px;">
+          <div class="filter-bar">
+            <input type="text" id="search-input" placeholder="🔍 Search posts..." oninput="filterPosts()">
+            <select id="section-filter" onchange="filterPosts()">
+              <option value="">All Sections</option>
+              <option value="most_popular">⭐ Most Popular</option>
+              <option value="today_new">📅 Today New</option>
+              <option value="trending">🔥 Trending</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="loadAllPosts()">🔄 Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Thumbnail</th>
+                  <th>Title</th>
+                  <th>Section</th>
+                  <th>Link</th>
+                  <th>Badges</th>
+                  <th>Order</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="posts-tbody">
+                <tr><td colspan="7" style="text-align:center;padding:30px;"><div class="spinner" style="margin:0 auto;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" style="width:500px;text-align:left;max-height:90vh;overflow-y:auto;">
+    <h3 style="margin-bottom:16px;">✏️ Edit Post</h3>
+    <input type="hidden" id="edit-id">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="form-group">
+        <label>New Thumbnail (leave empty to keep current)</label>
+        <div class="thumb-upload-area" style="padding:16px;">
+          <input type="file" accept="image/*" id="edit-thumb-file" onchange="previewThumb('edit')">
+          <img class="thumb-preview" id="edit-thumb-preview">
+          <div class="upload-hint" id="edit-upload-hint">📸 Click to change thumbnail</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="edit-title">
+      </div>
+      <div class="form-group">
+        <label>Link *</label>
+        <input type="url" id="edit-link">
+      </div>
+      <div class="form-group">
+        <label>Section *</label>
+        <select id="edit-section">
+          <option value="most_popular">⭐ Most Popular</option>
+          <option value="today_new">📅 Today New</option>
+          <option value="trending">🔥 Trending Now</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Order</label>
+        <input type="number" id="edit-order" min="0">
+      </div>
+      <div style="display:flex;gap:20px;">
+        <label class="check-row"><input type="checkbox" id="edit-premium"> PREMIUM</label>
+        <label class="check-row"><input type="checkbox" id="edit-new"> NEW</label>
+      </div>
+    </div>
+    <div class="modal-btns" style="margin-top:20px;">
+      <button class="btn btn-primary" id="edit-submit-btn" onclick="submitEdit()">💾 Save Changes</button>
+      <button class="btn btn-outline" onclick="closeModal('edit-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <div style="font-size:40px;margin-bottom:12px;">🗑️</div>
+    <h3>Delete Post?</h3>
+    <p>This will permanently delete the post and its thumbnail image. This action cannot be undone.</p>
+    <input type="hidden" id="delete-id">
+    <div class="modal-btns">
+      <button class="btn btn-danger" onclick="confirmDelete()">Yes, Delete</button>
+      <button class="btn btn-outline" onclick="closeModal('delete-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const API_BASE = window.API_BASE || 'http://localhost:5000';
+let ADMIN_KEY = '';
+let allPosts = [];
+
+// ─── AUTH ──────────────────────────────────────────────────
+async function doLogin() {
+  const key = document.getElementById('admin-key-input').value.trim();
+  if (!key) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/verify?adminKey=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    if (data.valid) {
+      ADMIN_KEY = key;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-screen').style.display = 'block';
+      loadStats();
+      loadRecentPosts();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  } catch {
+    document.getElementById('login-error').textContent = '⚠️ Cannot connect to server';
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+document.getElementById('admin-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogout() {
+  ADMIN_KEY = '';
+  location.reload();
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────
+function showPage(page) {
+  ['dashboard', 'add-post', 'manage-posts'].forEach(p => {
+    document.getElementById(`page-${p}`).style.display = p === page ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+  const map = { dashboard: 0, 'add-post': 1, 'manage-posts': 2 };
+  document.querySelectorAll('.nav-link')[map[page]]?.classList.add('active');
+  if (page === 'manage-posts') loadAllPosts();
+  if (page === 'dashboard') { loadStats(); loadRecentPosts(); }
+}
+
+// ─── API HELPERS ──────────────────────────────────────────
+function apiHeaders() {
+  return { 'x-admin-key': ADMIN_KEY };
+}
+
+function imgSrc(filename) {
+  return `${API_BASE}/uploads/${filename}`;
+}
+
+// ─── STATS ────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/posts`, { headers: apiHeaders() });
+    const posts = await res.json();
+    allPosts = posts;
+    document.getElementById('stat-total').textContent = posts.length;
+    document.getElementById('stat-popular').textContent = posts.filter(p => p.section === 'most_popular').length;
+    document.getElementById('stat-new').textContent = posts.filter(p => p.section === 'today_new').length;
+    document.getElementById('stat-trending').textContent = posts.filter(p => p.section === 'trending').length;
+  } catch { }
+}
+
+async function loadRecentPosts() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/posts`, { headers: apiHeaders() });
+    const posts = await res.json();
+    const recent = posts.slice(0, 5);
+    const el = document.getElementById('recent-list');
+    if (!recent.length) { el.innerHTML = '<div style="padding:20px;color:#999;text-align:center;">No posts yet.</div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Thumb</th><th>Title</th><th>Section</th><th>Added</th></tr></thead><tbody>
+      ${recent.map(p => `
+        <tr>
+          <td><img src="${imgSrc(p.thumbnail)}" style="width:60px;height:40px;object-fit:cover;border-radius:6px;"></td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.title}</td>
+          <td><span class="badge-pill badge-${p.section}">${sectionLabel(p.section)}</span></td>
+          <td style="color:#999;font-size:12px;">${new Date(p.createdAt).toLocaleDateString()}</td>
+        </tr>`).join('')}
+    </tbody></table>`;
+  } catch { }
+}
+
+function sectionLabel(s) {
+  return { most_popular: '⭐ Popular', today_new: '📅 Today', trending: '🔥 Trending' }[s] || s;
+}
+
+// ─── THUMBNAIL PREVIEW ────────────────────────────────────
+function previewThumb(prefix) {
+  const file = document.getElementById(`${prefix}-thumb-file`).files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById(`${prefix}-thumb-preview`);
+    const hint = document.getElementById(`${prefix}-upload-hint`);
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    hint.textContent = '✅ ' + file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── ADD POST ─────────────────────────────────────────────
+async function submitAddPost() {
+  const title = document.getElementById('add-title').value.trim();
+  const link = document.getElementById('add-link').value.trim();
+  const section = document.getElementById('add-section').value;
+  const order = document.getElementById('add-order').value;
+  const isPremium = document.getElementById('add-premium').checked;
+  const isNew = document.getElementById('add-new').checked;
+  const file = document.getElementById('add-thumb-file').files[0];
+
+  if (!title) return showToast('❌ Title is required', 'error');
+  if (!link) return showToast('❌ Link is required', 'error');
+  if (!file) return showToast('❌ Thumbnail image is required', 'error');
+
+  const btn = document.getElementById('add-submit-btn');
+  btn.disabled = true; btn.textContent = '⏳ Uploading...';
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('link', link);
+  fd.append('section', section);
+  fd.append('order', order);
+  fd.append('isPremium', isPremium);
+  fd.append('isNew', isNew);
+  fd.append('thumbnail', file);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/posts`, {
+      method: 'POST', headers: apiHeaders(), body: fd
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ Post added successfully!', 'success');
+      resetAddForm();
+    } else {
+      showToast('❌ ' + (data.error || 'Failed'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ Network error', 'error');
+  }
+  btn.disabled = false; btn.textContent = '➕ Add Post';
+}
+
+function resetAddForm() {
+  document.getElementById('add-title').value = '';
+  document.getElementById('add-link').value = '';
+  document.getElementById('add-section').value = 'most_popular';
+  document.getElementById('add-order').value = '0';
+  document.getElementById('add-premium').checked = true;
+  document.getElementById('add-new').checked = false;
+  document.getElementById('add-thumb-file').value = '';
+  document.getElementById('add-thumb-preview').style.display = 'none';
+  document.getElementById('add-upload-hint').innerHTML = '📸 Click to upload thumbnail<br><strong>JPG, PNG, WebP</strong> — max 10MB';
+}
+
+// ─── MANAGE / LIST POSTS ──────────────────────────────────
+async function loadAllPosts() {
+  const tbody = document.getElementById('posts-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;"><div class="spinner" style="margin:0 auto;"></div></td></tr>';
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/posts`, { headers: apiHeaders() });
+    allPosts = await res.json();
+    renderPostsTable(allPosts);
+  } catch {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">Could not load posts.</td></tr>';
+  }
+}
+
+function filterPosts() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const sec = document.getElementById('section-filter').value;
+  const filtered = allPosts.filter(p => {
+    const matchQ = !q || p.title.toLowerCase().includes(q) || p.link.toLowerCase().includes(q);
+    const matchSec = !sec || p.section === sec;
+    return matchQ && matchSec;
+  });
+  renderPostsTable(filtered);
+}
+
+function renderPostsTable(posts) {
+  const tbody = document.getElementById('posts-tbody');
+  if (!posts.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">No posts found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = posts.map(p => `
+    <tr>
+      <td class="thumb-cell"><img src="${imgSrc(p.thumbnail)}" alt="" onerror="this.style.background='#eee'"></td>
+      <td style="max-width:200px;">
+        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px;" title="${p.title}">${p.title}</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">${new Date(p.createdAt).toLocaleDateString()}</div>
+      </td>
+      <td><span class="badge-pill badge-${p.section}">${sectionLabel(p.section)}</span></td>
+      <td style="max-width:160px;"><a href="${p.link}" target="_blank" style="color:#1565c0;font-size:12px;word-break:break-all;">${p.link.substring(0, 40)}${p.link.length > 40 ? '...' : ''}</a></td>
+      <td>
+        <span style="font-size:11px;">${p.isPremium ? '🟡PREM ' : ''}${p.isNew ? '🟢NEW' : ''}</span>
+      </td>
+      <td style="text-align:center;">${p.order}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick='openEdit(${JSON.stringify(p)})'>✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="openDelete('${p._id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ─── EDIT ─────────────────────────────────────────────────
+function openEdit(post) {
+  document.getElementById('edit-id').value = post._id;
+  document.getElementById('edit-title').value = post.title;
+  document.getElementById('edit-link').value = post.link;
+  document.getElementById('edit-section').value = post.section;
+  document.getElementById('edit-order').value = post.order;
+  document.getElementById('edit-premium').checked = post.isPremium;
+  document.getElementById('edit-new').checked = post.isNew;
+  document.getElementById('edit-thumb-file').value = '';
+  const preview = document.getElementById('edit-thumb-preview');
+  preview.src = imgSrc(post.thumbnail);
+  preview.style.display = 'block';
+  document.getElementById('edit-upload-hint').textContent = '📸 Click to change thumbnail';
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+async function submitEdit() {
+  const id = document.getElementById('edit-id').value;
+  const title = document.getElementById('edit-title').value.trim();
+  const link = document.getElementById('edit-link').value.trim();
+  const section = document.getElementById('edit-section').value;
+  const order = document.getElementById('edit-order').value;
+  const isPremium = document.getElementById('edit-premium').checked;
+  const isNew = document.getElementById('edit-new').checked;
+  const file = document.getElementById('edit-thumb-file').files[0];
+
+  if (!title || !link) return showToast('❌ Title and link required', 'error');
+
+  const btn = document.getElementById('edit-submit-btn');
+  btn.disabled = true; btn.textContent = '⏳ Saving...';
+
+  const fd = new FormData();
+  fd.append('title', title); fd.append('link', link);
+  fd.append('section', section); fd.append('order', order);
+  fd.append('isPremium', isPremium); fd.append('isNew', isNew);
+  if (file) fd.append('thumbnail', file);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/posts/${id}`, {
+      method: 'PUT', headers: apiHeaders(), body: fd
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ Post updated!', 'success');
+      closeModal('edit-modal');
+      loadAllPosts();
+    } else {
+      showToast('❌ ' + (data.error || 'Failed'), 'error');
+    }
+  } catch { showToast('❌ Network error', 'error'); }
+  btn.disabled = false; btn.textContent = '💾 Save Changes';
+}
+
+// ─── DELETE ───────────────────────────────────────────────
+function openDelete(id) {
+  document.getElementById('delete-id').value = id;
+  document.getElementById('delete-modal').classList.add('show');
+}
+
+async function confirmDelete() {
+  const id = document.getElementById('delete-id').value;
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/posts/${id}`, {
+      method: 'DELETE', headers: apiHeaders()
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🗑️ Post deleted', 'success');
+      closeModal('delete-modal');
+      loadAllPosts();
+      loadStats();
+    } else {
+      showToast('❌ ' + (data.error || 'Failed'), 'error');
+    }
+  } catch { showToast('❌ Network error', 'error'); }
+}
+
+// ─── MODAL ────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+
+// ─── TOAST ────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+</script>
+</body>
+</html>
